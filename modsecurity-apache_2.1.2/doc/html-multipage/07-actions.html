@@ -1,0 +1,246 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Actions</title><link href="modsecurity-reference.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.69.1" name="generator"><link rel="start" href="index.html" title="ModSecurity Reference Manual"><link rel="up" href="index.html" title="ModSecurity Reference Manual"><link rel="prev" href="06-transformation-functions.html" title="Transformation functions"><link rel="next" href="08-operators.html" title="Operators"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div style="background:#F5F5F5;width:100%;border-top:1px solid #DDDDDD;border-bottom:1px solid #DDDDDD"><table width="100%" cellspacing="0" cellpadding="0"><tr><td><a href="http://www.modsecurity.org"><img style="margin:4px" src="modsecurity.gif" width="120" height="36" alt="ModSecurity" border="0"></a></td><td align="right"><a href="http://www.breach.com"><img style="margin:6px" src="breach-logo-small.gif" height="36" width="100" border="0"></a></td></tr></table></div><div id="navheader"><table summary="Navigation header" width="100%"><tr><th align="center" colspan="3">Actions</th></tr><tr><td align="left" width="20%"><a accesskey="p" href="06-transformation-functions.html">Prev</a>&nbsp;</td><td align="center" width="60%">&nbsp;<a accesskey="h" href="index.html">Home</a></td><td align="right" width="20%">&nbsp;<a accesskey="n" href="08-operators.html">Next</a></td></tr></table><hr size="1"></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="07-actions"></a>Actions</h2></div></div><div></div></div><p>Each action belongs to one of five groups:</p><div class="orderedlist"><ol type="1"><li><p><span class="emphasis"><em>Disruptive actions</em></span> - are those actions
+        where ModSecurity will intercept the data. They can only appear in the
+        first rule in a chain.</p></li><li><p><span class="emphasis"><em>Non-disruptive actions</em></span> - can appear
+        anywhere.</p></li><li><p><span class="emphasis"><em>Flow actions</em></span> - can appear only in the first
+        rule in a chain.</p></li><li><p><span class="emphasis"><em>Meta-data actions</em></span>(<code class="literal">id</code>,<code class="literal">
+        rev</code>,<code class="literal"> severity</code>,<code class="literal"> msg</code>) - can only appear in the first rule in
+        a chain.</p></li><li><p><span class="emphasis"><em>Data actions</em></span> - can appear anywhere; these
+        actions are completely passive and only serve to carry data used by
+        other actions.</p></li></ol></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10EF1"></a><code class="literal">allow</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Stops processing on
+      a successful match and allows transaction to proceed.</p><p><span class="bold"><strong>Action Group:</strong></span> Disruptive</p><p>Example:</p><pre class="programlisting">SecRule REMOTE_ADDR "^192\.168\.1\.100$" nolog,phase:1,<span class="bold"><strong>allow</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>The allow action only applies to the current processing phase. If
+      your intent is to explicitly allow a request, then you should use the
+      "ctl" action to turn the ruleEngine off -<code class="literal">
+      ctl:ruleEngine=Off</code>.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10F11"></a><code class="literal">auditlog</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Marks the
+      transaction for logging in the audit log.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example:</p><pre class="programlisting">SecRule REMOTE_ADDR "^192\.168\.1\.100$" <span class="bold"><strong>auditlog</strong></span>,phase:1,allow</pre><p><span class="bold"><strong>Note</strong></span></p><p>The auditlog action is now explicit if log is already
+      specified.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10F2E"></a><code class="literal">capture</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> When used together
+      with the regular expression operator, capture action will create copies
+      of regular expression captures and place them into the transaction
+      variable collection. Up to ten captures will be copied on a successful
+      pattern match, each with a name consisting of a digit from 0 to
+      9.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example:</p><pre class="programlisting">SecRule REQUEST_BODY "^username=(\w{25,})" phase:2,<span class="bold"><strong>capture</strong></span>,t:none,chain
+SecRule TX:1 "(?:(?:a(dmin|nonymous)))"</pre><p><span class="bold"><strong>Note</strong></span></p><p>The 0 data captures the entire REGEX match and 1 captures the data
+      in the first parantheses, etc...</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10F4B"></a><code class="literal">chain</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Chains the rule
+      where the action is placed with the rule that immediately follows it.
+      The result is called a<span class="emphasis"><em> rule chain</em></span>. Chained rules
+      allow for more complex rule matches where you want to use a number of
+      different VARIABLES to create a better rule and to help prevent false
+      positives.</p><p><span class="bold"><strong>Action Group:</strong></span> Flow</p><p>Example:</p><pre class="programlisting"># Refuse to accept POST requests that do
+# not specify request body length 
+SecRule REQUEST_METHOD ^POST$<span class="bold"><strong> chain</strong></span>
+SecRule REQUEST_HEADER:Content-Length ^$</pre><p><span class="bold"><strong>Note</strong></span></p><p>In programming language concepts, think of chained rules somewhat
+      similar to AND conditional statements. The actions specified in the
+      first portion of the chained rule will only be triggered if all of the
+      variable checks return positive hits. If one aspect of the chained rule
+      is negative, then the entire rule chain is negative. Also note that
+      disruptive actions, execution phases, metadata actions (id, rev, msg)
+      and skip actions can only be specified on by the chain starter
+      rule.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10F6B"></a><code class="literal">ctl</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> The ctl action
+      allows configuration options to be updated for the transaction.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example:</p><pre class="programlisting"># Parse requests with Content-Type "text/xml" as XML 
+SecRule REQUEST_CONTENT_TYPE ^text/xml nolog,pass,<span class="bold"><strong>ctl:requestBodyProcessor=XML</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>The following configuration options are supported:</p><div class="orderedlist"><ol type="1"><li><p><code class="literal">auditEngine</code></p></li><li><p><code class="literal">auditLogParts</code></p></li><li><p><code class="literal">debugLogLevel</code></p></li><li><p><code class="literal">requestBodyAccess</code></p></li><li><p><code class="literal">requestBodyLimit</code></p></li><li><p><code class="literal">requestBodyProcessor</code></p></li><li><p><code class="literal">responseBodyAccess</code></p></li><li><p><code class="literal">responseBodyLimit</code></p></li><li><p><code class="literal">ruleEngine</code></p></li></ol></div><p>With the exception of<code class="literal">
+      requestBodyProcessor</code>, each configuration option corresponds to
+      one configuration directive and the usage is identical.</p><p>The requestBodyProcessor option allows you to configure the
+      request body processor. By default ModSecurity will use the <code class="literal">URLENCODED</code> and<code class="literal">
+      MULTIPART</code> processors to process an <code class="literal">application/x-www-form-urlencoded</code> and a
+      <code class="literal">multipart/form-data</code> body,
+      respectively. A third processor, XML, is also supported, but it is never
+      used implicitly. Instead you must tell ModSecurity to use it by placing
+      a few rules in the<code class="literal"> REQUEST_HEADERS</code>
+      processing phase. After the request body was processed as XML you will
+      be able to use the XML-related features to inspect it.</p><p>Request body processors will not interrupt a transaction if an
+      error occurs during parsing. Instead they will set variables<code class="literal"> REQBODY_PROCESSOR_ERROR</code> and<code class="literal"> REQBODY_PROCESSOR_ERROR_MSG</code>. These variables
+      should be inspected in the <code class="literal">REQUEST_BODY</code> phase and an appropriate action
+      taken.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10FE1"></a><code class="literal">deny</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Stops rule
+      processing and intercepts transaction.</p><p><span class="bold"><strong>Action Group:</strong></span> Disruptive</p><p>Example:</p><pre class="programlisting">SecRule REQUEST_HEADERS:User-Agent "nikto" log,<span class="bold"><strong>deny</strong></span>,msg:'Nikto Scanners Identified"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10FF8"></a><code class="literal">deprecatevar</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Decrement counter
+      based on its age.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example: The following example will decrement the counter by 60
+      every 300 seconds.</p><pre class="programlisting">SecAction deprecatevar:session.score=60/300</pre><p><span class="bold"><strong>Note</strong></span></p><p>Counter values are always positive, meaning the value will never
+      go below zero.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11011"></a><code class="literal">drop</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Immediately initiate
+      a "connection close" action to tear down the TCP connection by sending a
+      FIN packet.</p><p><span class="bold"><strong>Action Group:</strong></span> Disruptive</p><p>Example: The following example initiates an IP collection for
+      tracking Basic Authentication attempts. If the client goes over the
+      threshold of more than 25 attempts in 2 minutes, it will DROP subsequent
+      connections.</p><pre class="programlisting">SecAction initcol:ip=%{REMOTE_ADDR},nolog
+SecRule ARGS:login "!^$" \
+    nolog,phase:1,setvar:ip.auth_attempt=+1,deprecatevar:ip.auth_attempt=20/120
+SecRule IP:AUTH_ATTEMPT "@gt 25" \
+    log,<span class="bold"><strong>drop</strong></span>,phase:1,msg:'Possible Brute Force Attack"</pre><p><span class="bold"><strong>Note</strong></span></p><p>This action is extremely useful when responding to both Brute
+      Force and Denial of Service attacks in that, in both cases, you want to
+      minimize both the network bandwidth and the data returned to the client.
+      This action causes error message to appear in the log "(9)Bad file
+      descriptor: core_output_filter: writing data to the network"</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1102E"></a><code class="literal">exec</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Executes an external
+      script/binary supplied as parameter.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example:</p><pre class="programlisting">SecRule REQUEST_URI "^/cgi-bin/script\.pl" \
+    "log,<span class="bold"><strong>exec:/usr/local/apache/bin/test.sh</strong></span>,phase:1"</pre><p><span class="bold"><strong>Note</strong></span></p><p>This directive does not effect a primary action if it exists. This
+      action will always call script with no parameters, but providing all
+      information in the environment. All the usual CGI environment variables
+      will be there. You can have one binary executed per filter match.
+      Execution will add the header mod_security-executed to the list of
+      request headers. You should be aware that forking a threaded process
+      results in all threads being replicated in the new process. Forking can
+      therefore incur larger overhead in multithreaded operation. The script
+      you execute must write something (anything) to stdout. If it doesn't
+      ModSecurity will assume execution didn't work.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1104B"></a><code class="literal">expirevar</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configurescollection
+      variable to expire after the given time in seconds.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example:</p><pre class="programlisting">SecRule REQUEST_COOKIES:JSESSIONID "!^$" nolog,phase:1,pass,chain
+SecAction setsid:%{REQUEST_COOKIES:JSESSIONID}
+SecRule REQUEST_URI "^/cgi-bin/script\.pl" \
+    "log,allow,setvar:session.suspicious=1,<span class="bold"><strong>expirevar:session.suspicious=3600</strong></span>,phase:1"</pre><p><span class="bold"><strong>Note</strong></span></p><p>You should use expirevar actions at the same time that you use
+      setvar actions in order to keep the indended expiration time. If they
+      are used on their own (perhaps in a SecAction directive) the expire time
+      could get re-set. When variables are removed from collections, and there
+      are no other changes, collections are not written to disk at the end of
+      request. This is because the variables can always be expired again when
+      the collection is read again on a subsequent request.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11068"></a><code class="literal">id</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Assigns a unique ID
+      to the rule or chain.</p><p><span class="bold"><strong>Action Group:</strong></span> Metadata</p><p>Example:</p><pre class="programlisting">SecRule &amp;REQUEST_HEADERS:Host "@eq 0" \
+    "log,<span class="bold"><strong>id:60008</strong></span>,severity:2,msg:'Request Missing a Host Header'"</pre><p><span class="bold"><strong>Note</strong></span></p><p>These are the reserved ranges:</p><div class="itemizedlist"><ul type="disc"><li><p>1-99,999; reserved for local (internal) use. Use as you
+          see fit but do not use this range for rules that are distributed to
+          others.</p></li><li><p>100,000-199,999; reserved for internal use of the engine, to
+          assign to rules that do not have explicit IDs.</p></li><li><p>200,000-299,999; reserved for rules published at
+          modsecurity.org.</p></li><li><p>300,000-399,999; reserved for rules published at
+          gotroot.com.</p></li><li><p>400,000-419,999; unused (available for reservation).</p></li><li><p>420,000-429,999; reserved for <a href="http://projects.otaku42.de/wiki/ScallyWhack" target="_top">ScallyWhack</a>.</p></li><li><p>430,000-899,999; unused (available for reservation).</p></li><li><p>900,000-999,999; reserved for the <a href="http://www.modsecurity.org/projects/rules/" target="_top">Core Rules</a>
+          project.</p></li><li><p>1,000,000 and above; unused (available for
+          reservation).</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N110AA"></a><code class="literal">initcol</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Initialises a named
+      persistent collection, either by loading data from storage or by
+      creating a new collection in memory.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example: The following example initiates IP address
+      tracking.</p><pre class="programlisting">SecAction<span class="bold"><strong> initcol:ip=%{REMOTE_ADDR}</strong></span>,nolog</pre><p><span class="bold"><strong>Note</strong></span></p><p>Every collection contains several built-in variables that are
+      read-only:</p><div class="orderedlist"><ol type="1"><li><p><code class="literal">CREATE_TIME</code> - date/time of
+          the creation of the collection.</p></li><li><p><code class="literal">KEY</code> - the value of the
+          initcol variable (the client's IP address in the example).</p></li><li><p><code class="literal">LAST_UPDATE_TIME</code> -
+          date/time of the last update to the collection.</p></li><li><p><code class="literal">TIMEOUT</code> - date/time in
+          seconds when the collection will be updated on disk from memory (if
+          no other updates occur).</p></li><li><p><code class="literal">UPDATE_COUNTER</code> - how many
+          times the collection has been updated since creation.</p></li><li><p><code class="literal">UPDATE_RATE</code> - is the
+          average rate updates per minute since creation.</p></li></ol></div><p>Collections are loaded into memory when the initcol action is
+      encountered. The collection in storage will be updated (and the
+      appropriate counters increased) <span class="emphasis"><em>only</em></span> if it was
+      changed during transaction processing.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>To create a collection to hold session variables (<code class="literal">SESSION</code>) use action <code class="literal">setsid</code>. To create a collection to hold user
+        variables (<code class="literal">USER</code>) use action
+        <code class="literal">setuid</code>.</p></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>At this time it is only possible to have three
+        collections:<code class="literal"> IP</code>,<code class="literal"> SESSION</code>, and <code class="literal">USER</code>.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11115"></a><code class="literal">log</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Indicates that a
+      successful match of the rule needs to be logged.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example:</p><pre class="programlisting">SecAction initcol:ip=%{REMOTE_ADDR},<span class="bold"><strong>log</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>This action will log matches to the Apache error log file and the
+      ModSecurity audit log.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11131"></a><code class="literal">msg</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Assigns a custom
+      message to the rule or chain.</p><p><span class="bold"><strong>Action Group:</strong></span> Metadata</p><p>Example:</p><pre class="programlisting">SecRule &amp;REQUEST_HEADERS:Host "@eq 0" \
+    "log,id:60008<span class="bold"><strong>,</strong></span>severity:2,<span class="bold"><strong>msg:'Request Missing a Host Header'"</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>The msg information appears in the error and/or audit log files
+      and is not sent back to the client in response headers.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11151"></a><code class="literal">multiMatch</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> If enabled
+      ModSecurity will perform multiple operator invocations for every target,
+      before and after every anti-evasion transformation is performed.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example:</p><pre class="programlisting">SecDefaultAction log,deny,phase:1,t:removeNulls,t:lowercase
+SecRule ARGS "attack" <span class="bold"><strong>multiMatch</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>Normally, variables are evaluated once, only after all
+      transformation functions have completed. With multiMatch, variables are
+      checked against the operator before and after every transformation
+      function that changes the input.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1116D"></a><code class="literal">noauditlog</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Indicates that a
+      successful match of the rule should not be used as criteria whether the
+      transaction should be logged to the audit log.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example:</p><pre class="programlisting">SecRule REQUEST_HEADERS:User-Agent "Test" allow,<span class="bold"><strong>noauditlog</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>If the SecAuditEngine is set to On, all of the transactions will
+      be logged. If it is set to RelevantOnly, then you can control it with
+      the noauditlog action. Even if the noauditlog action is applied to a
+      specific rule and a rule either before or after triggered an audit
+      event, then the tranaction will be logged to the audit log. The correct
+      way to disable audit logging for the entire transaction is to use
+      "<code class="literal">ctl:auditEngine=Off</code>"</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1118D"></a><code class="literal">nolog</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Prevents rule
+      matches from appearing in both the error and audit logs.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example:</p><pre class="programlisting">SecRule REQUEST_HEADERS:User-Agent "Test" allow,<span class="bold"><strong>nolog</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>The nolog action also implies noauditlog.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N111A9"></a><code class="literal">pass</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Continues processing
+      with the next rule in spite of a successful match.</p><p><span class="bold"><strong>Action Group:</strong></span> Disruptive</p><p>Example:</p><pre class="programlisting">SecRule REQUEST_HEADERS:User-Agent "Test" log,<span class="bold"><strong>pass</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>Transaction will not be interrupted but it will be logged (unless
+      logging has been suppressed).</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N111C5"></a><code class="literal">pause</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Pauses transaction
+      processing for the specified number of milliseconds.</p><p><span class="bold"><strong>Action Group:</strong></span> Disruptive</p><p>Example:</p><pre class="programlisting">SecRule REQUEST_HEADERS:User-Agent "Test" log,deny,status:403,<span class="bold"><strong>pause:5000</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>This feature can be of limited benefit for slowing down Brute
+      Force Scanners, however use with care. If you are under a Denial of
+      Service type of attack, the pause feature may make matters worse as this
+      feature will cause child processes to sit idle until the pause is
+      completed.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N111E1"></a><code class="literal">phase</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Places the rule (or
+      the rule chain) into one of five available processing phases.</p><p><span class="bold"><strong>Action Group:</strong></span> Disruptive</p><p>Example:</p><pre class="programlisting">SecDefaultAction log,deny,<span class="bold"><strong>phase:1</strong></span>,t:removeNulls,t:lowercase
+SecRule REQUEST_HEADERS:User-Agent "Test" log,deny,status:403</pre><p><span class="bold"><strong>Note</strong></span></p><p>Keep in mind that is you specify the incorrect phase, the target
+      variable that you specify may be empty. This could lead to a false
+      negative situation where your variable and operator (RegEx) may be
+      correct, but it misses malicious data because you specified the wrong
+      phase.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N111FE"></a><code class="literal">proxy</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Intercepts
+      transaction by forwarding request to another web server using the proxy
+      backend.</p><p><span class="bold"><strong>Action Group:</strong></span> Disruptive</p><p>Example:</p><pre class="programlisting">SecRule REQUEST_HEADERS:User-Agent "Test" log,<span class="bold"><strong>proxy:http://www.honeypothost.com/</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>For this action to work, mod_proxy must also be installed. This
+      action is useful if you would like to proxy matching requests onto a
+      honeypot webserver.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1121A"></a><code class="literal">redirect</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Intercepts
+      transaction by issuing a redirect to the given location.</p><p><span class="bold"><strong>Action Group:</strong></span> Disruptive</p><p>Example:</p><pre class="programlisting">SecRule REQUEST_HEADERS:User-Agent "Test" \
+    log,<span class="bold"><strong>redirect:http://www.hostname.com/failed.html</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>If the <code class="literal">status</code> action is present
+      and its value is acceptable (301, 302, 303, or 307) it will be used for
+      the redirection. Otherwise status code 302 will be used.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1123A"></a><code class="literal">rev</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Specifies rule
+      revision.</p><p><span class="bold"><strong>Action Group:</strong></span> Metadata</p><p>Example:</p><pre class="programlisting">SecRule REQUEST_METHOD "^PUT$" "id:340002,<span class="bold"><strong>rev:1</strong></span>,severity:2,msg:'Restricted HTTP function'"</pre><p><span class="bold"><strong>Note</strong></span></p><p>This action is used in combination with the <code class="literal">id</code> action to allow the same rule ID to be used
+      after changes take place but to still provide some indication the rule
+      changed.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1125B"></a><code class="literal">sanitiseArg</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Sanitises (replaces
+      each byte with an asterisk) a named request argument prior to audit
+      logging.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example:</p><pre class="programlisting">SecAction nolog,phase:2,<span class="bold"><strong>sanitiseArg:password</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>The sanitize actions do not sanitize any data within the actual
+      raw requests but only on the copy of data within memory that is set to
+      log to the audit log. It will not sanitize the data in the
+      modsec_debug.log file (if the log level is set high enough to capture
+      this data).</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11277"></a><code class="literal">sanitiseMatched</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Sanitises the
+      variable (request argument, request header, or response header) that
+      caused a rule match.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example: This action can be used to sanitise arbitrary transaction
+      elements when they match a condition. For example, the example below
+      will sanitise any argument that contains the word<span class="emphasis"><em>
+      password</em></span> in the name.</p><pre class="programlisting">SecRule ARGS_NAMES password nolog,pass,<span class="bold"><strong>sanitiseMatched</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>Same note as sanitiseArg.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11296"></a><code class="literal">sanitiseRequestHeader</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Sanitises a named
+      request header.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example: This will sanitise the data in the Authorization
+      header.</p><pre class="programlisting">SecAction log,phase:1,<span class="bold"><strong>sanitiseRequestHeader:Authorization</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>Same note as sanitiseArg.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N112B2"></a><code class="literal">sanitiseResponseHeader</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Sanitises a named
+      response header.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example: This will sanitise the Set-Cookie data sent to the
+      client.</p><pre class="programlisting">SecAction log,phase:3,<span class="bold"><strong>sanitiseResponseHeader:Set-Cookie</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>Same note as sanitiseArg.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N112CE"></a><code class="literal">severity</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Assigns severity to
+      the rule it is placed with.</p><p><span class="bold"><strong>Action Group:</strong></span> Metadata</p><p>Example:</p><pre class="programlisting">SecRule REQUEST_METHOD "^PUT$" "id:340002,rev:1,<span class="bold"><strong>severity:2</strong></span>,msg:'Restricted HTTP function'"</pre><p><span class="bold"><strong>Note</strong></span></p><p>The severity numbers follow the Syslog convention:</p><div class="itemizedlist"><ul type="disc"><li><p>0 = EMERGENCY</p></li><li><p>1 = ALERT</p></li><li><p>2 = CRITICAL</p></li><li><p>3 = ERROR</p></li><li><p>4 = WARNING</p></li><li><p>5 = NOTICE</p></li><li><p>6 = INFO</p></li><li><p>7 = DEBUG</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11304"></a><code class="literal">setuid</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Special-purpose
+      action that initialises the <code class="literal">USER</code>
+      collection.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example:</p><pre class="programlisting">SecAction <span class="bold"><strong>setuid:%{REMOTE_USER}</strong></span>,nolog</pre><p><span class="bold"><strong>Note</strong></span></p><p>After initialisation takes place the variable <code class="literal">USERID</code> will be available for use in the
+      subsequent rules.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11329"></a><code class="literal">setsid</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span>
+      Special-purposeaction that initialises the <code class="literal">SESSION</code> collection.</p><p><span class="bold"><strong>Action Group:
+      </strong></span>Non-Disruptive</p><p>Example:</p><pre class="programlisting"># Initialise session variables using the session cookie value 
+SecRule REQUEST_COOKIES:PHPSESSID !^$ chain,nolog,pass
+SecAction <span class="bold"><strong>setsid:%{REQUEST_COOKIES.PHPSESSID}</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>On first invocation of this action the collection will be empty
+      (not taking the pre-defined variables into account - see <code class="literal">initcol</code> for more information). On subsequent
+      invocations the contents of the collection (session, in this case) will
+      be retrieved from storage. After initialisation takes place the
+      variable<code class="literal"> SESSIONID</code> will be available
+      for use in the subsequent rules.This action understands each application
+      maintains its own set of sessions. It will utilise the current web
+      application ID to create a session namespace.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11351"></a><code class="literal">setenv</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Creates, removes, or
+      updates an environment variable.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Examples:</p><p>To create a new variable (if you omit the value <code class="literal">1</code> will be used):</p><pre class="programlisting">setenv:name=value</pre><p>To remove a variable:</p><pre class="programlisting">setenv:!name</pre><p><span class="bold"><strong>Note</strong></span></p><p>This action can be used to establish communication with other
+      Apache modules.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11375"></a><code class="literal">setvar</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Creates, removes, or
+      updates a variable in the specified collection.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Examples:</p><p>To create a new variable:</p><pre class="programlisting">setvar:tx.score=10</pre><p>To remove a variable prefix the name with exclamation mark:</p><pre class="programlisting">setvar:!tx.score</pre><p>To increase or decrease variable value use <code class="literal">+</code> and <code class="literal">-</code>
+      characters in front of a numerical value:</p><pre class="programlisting">setvar:tx.score=+5</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1139C"></a><code class="literal">skip</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Skips one or more
+      rules (or chains) on successful match.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example:</p><p><pre class="programlisting">SecRule REQUEST_URI "^/$" "chain,<span class="bold"><strong>skip:2</strong></span>"
+SecRule REMOTE_ADDR "^127\.0\.0\.1$" "chain"
+SecRule REQUEST_HEADERS:User-Agent "^Apache \(internal dummy connection\)$" "t:none"  
+SecRule &amp;REQUEST_HEADERS:Host "@eq 0" \
+    "deny,log,status:400,id:960008,severity:4,msg:'Request Missing a Host Header'"
+SecRule &amp;REQUEST_HEADERS:Accept "@eq 0" \
+    "log,deny,log,status:400,id:960015,msg:'Request Missing an Accept Header'"</pre></p><p><span class="bold"><strong>Note</strong></span></p><p>Skip only applies to the current processing phase and not
+      necessarily the order in which the rules appear in the configuration
+      file. If you group rules by processing phases, then skip should work as
+      expected. This action can not be used to skip rules within one chain.
+      Accepts a single paramater denoting the number of rules (or chains) to
+      skip.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N113BA"></a><code class="literal">status</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Specifies the
+      response status code to use with actions<code class="literal">
+      deny</code> and<code class="literal"> redirect</code>.</p><p><span class="bold"><strong>Action Group:</strong></span> Disruptive</p><p>Example:</p><pre class="programlisting">SecDefaultAction log,deny,<span class="bold"><strong>status:403</strong></span>,phase:1</pre><p><span class="bold"><strong>Note</strong></span></p><p>Staus actions defined in Apache scope locations (such as
+      Directory, Location, etc...) may be superceded by phase:1 action
+      settings. The Apache ErrorDocument directive will be triggered if
+      present in the configuration. Therefore if you have previously defined a
+      custom error page for a given status then it will be executed and its
+      output presented to the user.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N113DF"></a><code class="literal">t</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> This action can be
+      used which transformation function should be used against the specified
+      variables before they (or the results, rather) are run against the
+      operator specified in the rule.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example:</p><pre class="programlisting">SecDefaultAction log,deny,phase:1,t:removeNulls,t:lowercase 
+SecRule REQUEST_COOKIES:SESSIONID "47414e81cbbef3cf8366e84eeacba091" \
+    log,deny,status:403,<span class="bold"><strong>t:md5</strong></span></pre><p><span class="bold"><strong>Note</strong></span></p><p>Any transformation functions that you specify in a SecRule will be
+      in addtion to previous ones specified in SecDefaultAction. Use of
+      "t:none" will remove all transformation functions for the specified
+      rule.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N113FB"></a><code class="literal">xmlns</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> This action should
+      be used together with an XPath expression to register a
+      namespace.</p><p><span class="bold"><strong>Action Group:</strong></span>
+      Non-Disruptive</p><p>Example:</p><pre class="programlisting">SecRule REQUEST_HEADERS:Content-Type "text/xml" \
+    phase:1,pass,ctl:requestBodyProcessor=XML,ctl:requestBodyAccess=On,<span class="bold"><strong>xmlns:xsd="http://www.w3.org/2001/XMLSchema"</strong></span>
+SecRule XML:/soap:Envelope/soap:Body/q1:getInput/id() "123" phase:2,deny</pre></div></div><div id="navfooter"><hr size="1"><table summary="Navigation footer" width="100%"><tr><td align="left" width="40%"><a accesskey="p" href="06-transformation-functions.html">Prev</a>&nbsp;</td><td align="center" width="20%">&nbsp;</td><td align="right" width="40%">&nbsp;<a accesskey="n" href="08-operators.html">Next</a></td></tr><tr><td valign="top" align="left" width="40%">Transformation functions&nbsp;</td><td align="center" width="20%"><a accesskey="h" href="index.html">Home</a></td><td valign="top" align="right" width="40%">&nbsp;Operators</td></tr></table></div><div align="center" class="copyright">Copyright (C) 2004-2006 <a href="http://www.breach.com">Breach Security</a></div></body></html>

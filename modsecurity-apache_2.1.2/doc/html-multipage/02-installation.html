@@ -1,0 +1,29 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Installation</title><link href="modsecurity-reference.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.69.1" name="generator"><link rel="start" href="index.html" title="ModSecurity Reference Manual"><link rel="up" href="index.html" title="ModSecurity Reference Manual"><link rel="prev" href="ar01s02.html" title="ModSecurity Core Rules"><link rel="next" href="03-configuration-directives.html" title="Configuration Directives"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div style="background:#F5F5F5;width:100%;border-top:1px solid #DDDDDD;border-bottom:1px solid #DDDDDD"><table width="100%" cellspacing="0" cellpadding="0"><tr><td><a href="http://www.modsecurity.org"><img style="margin:4px" src="modsecurity.gif" width="120" height="36" alt="ModSecurity" border="0"></a></td><td align="right"><a href="http://www.breach.com"><img style="margin:6px" src="breach-logo-small.gif" height="36" width="100" border="0"></a></td></tr></table></div><div id="navheader"><table summary="Navigation header" width="100%"><tr><th align="center" colspan="3">Installation</th></tr><tr><td align="left" width="20%"><a accesskey="p" href="ar01s02.html">Prev</a>&nbsp;</td><td align="center" width="60%">&nbsp;<a accesskey="h" href="index.html">Home</a></td><td align="right" width="20%">&nbsp;<a accesskey="n" href="03-configuration-directives.html">Next</a></td></tr></table><hr size="1"></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="02-installation"></a>Installation</h2></div></div><div></div></div><p>ModSecurity installation consists of the following steps:</p><div class="orderedlist"><ol type="1"><li><p>ModSecurity 2.x works with Apache 2.0.x or better.</p></li><li><p>Make sure you have <code class="literal">mod_unique_id</code> installed.</p></li><li><p>Install the latest version of libxml2, if it isn't already
+        installed on the server.</p></li><li><p>Unpack the ModSecurity archive</p></li><li><p>Edit Makefile to configure the path to the Apache ServerRoot
+        directory. You can check this by identifying the ServerRoot directive
+        setting in your httpd.conf file. This is the path that was specified
+        with the "--install-path=" configuration flag during compilation (for
+        example, in Fedora Core4:<code class="filename"> top_dir =
+        /etc/httpd</code>).</p></li><li><p>Edit Makefile to configure the correct include path for libxml
+        (for example: <code class="filename">INCLUDES=-I/usr/include/libxml2</code>)</p></li><li><p>Compile with <code class="literal">make</code></p></li><li><p>Stop Apache</p></li><li><p>Install with<code class="literal"> make
+        install</code></p></li><li><p>(Optional) Add one line to your configuration to load libxml2:
+        <code class="filename">LoadFile
+        /usr/lib/libxml2.so</code></p></li><li><p>Add one line to your configuration to load ModSecurity: <code class="literal">LoadModule security2_module
+        modules/mod_security2.so</code></p></li><li><p>Configure ModSecurity</p></li><li><p>Start Apache</p></li><li><p>You now have ModSecurity 2.x up and running.</p></li></ol></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>If you have compiled Apache yourself you might experience problems
+      compiling ModSecurity against PCRE. This is because Apache bundles PCRE
+      but this library is also typically provided by the operating system. I
+      would expect most (all) vendor-packaged Apache distributions to be
+      configured to use an external PCRE library (so this should not be a
+      problem).</p><p>You want to avoid Apache using the bundled PCRE library and
+      ModSecurity linking against the one provided by the operating system.
+      The easiest way to do this is to compile Apache against the PCRE library
+      provided by the operating system (or you can compile it against the
+      latest PCRE version you downloaded from the main PCRE distribution
+      site). You can do this at configure time using the<code class="literal"> --with-pcre</code> switch. If you are not in a
+      position to recompile Apache then, to compile ModSecurity successfully,
+      you'd still need to have access to the bundled PCRE headers (they are
+      available only in the Apache source code) and change the include path
+      for ModSecurity (as you did in step 7 above) to point to them.</p><p>Do note that if your Apache is using an external PCRE library you
+      can compile ModSecurity with <code class="literal">WITH_PCRE_STUDY</code> defined,which would possibly
+      give you a slight performance edge in regular expression
+      processing.</p></div></div><div id="navfooter"><hr size="1"><table summary="Navigation footer" width="100%"><tr><td align="left" width="40%"><a accesskey="p" href="ar01s02.html">Prev</a>&nbsp;</td><td align="center" width="20%">&nbsp;</td><td align="right" width="40%">&nbsp;<a accesskey="n" href="03-configuration-directives.html">Next</a></td></tr><tr><td valign="top" align="left" width="40%">ModSecurity Core Rules&nbsp;</td><td align="center" width="20%"><a accesskey="h" href="index.html">Home</a></td><td valign="top" align="right" width="40%">&nbsp;Configuration Directives</td></tr></table></div><div align="center" class="copyright">Copyright (C) 2004-2006 <a href="http://www.breach.com">Breach Security</a></div></body></html>

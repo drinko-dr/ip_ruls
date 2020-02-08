@@ -1,0 +1,362 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Configuration Directives</title><link href="modsecurity-reference.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.69.1" name="generator"><link rel="start" href="index.html" title="ModSecurity Reference Manual"><link rel="up" href="index.html" title="ModSecurity Reference Manual"><link rel="prev" href="02-installation.html" title="Installation"><link rel="next" href="04-processing-phases.html" title="Processing Phases"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div style="background:#F5F5F5;width:100%;border-top:1px solid #DDDDDD;border-bottom:1px solid #DDDDDD"><table width="100%" cellspacing="0" cellpadding="0"><tr><td><a href="http://www.modsecurity.org"><img style="margin:4px" src="modsecurity.gif" width="120" height="36" alt="ModSecurity" border="0"></a></td><td align="right"><a href="http://www.breach.com"><img style="margin:6px" src="breach-logo-small.gif" height="36" width="100" border="0"></a></td></tr></table></div><div id="navheader"><table summary="Navigation header" width="100%"><tr><th align="center" colspan="3">Configuration Directives</th></tr><tr><td align="left" width="20%"><a accesskey="p" href="02-installation.html">Prev</a>&nbsp;</td><td align="center" width="60%">&nbsp;<a accesskey="h" href="index.html">Home</a></td><td align="right" width="20%">&nbsp;<a accesskey="n" href="04-processing-phases.html">Next</a></td></tr></table><hr size="1"></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="03-configuration-directives"></a>Configuration Directives</h2></div></div><div></div></div><p>The following section outlines all of the ModSecurity directives.
+    Most of the ModSecurity directives can be used inside the various Apache
+    Scope Directives such as <code class="literal">VirtualHost</code>,
+    <code class="literal">Location</code>, <code class="literal">LocationMatch</code>,
+    <code class="literal">Directory</code>, etc... There are others, however, that can
+    only be used once in the main configuration file. This information is
+    specified in the Scope sections below.</p><p>These rules, along with the Core rules files, should be contained is
+    files outside of the httpd.conf file and called up with Apache "Include"
+    directives. This allows for easier updating/migration of the rules. If you
+    create your own custom rules that you would like to use with the Core
+    rules, you should create a file called -
+    <code class="filename">modsecurity_crs_15_customrules.conf</code> and place it in
+    the same directory as the Core rules files. By using this file name, your
+    custom rules will be called up after the standard ModSecurity Core rules
+    configuration file but before the other Core rules. This allows your rules
+    to be evaluate first which can be useful if you need to implement specific
+    "allow" rules or to correct any false positives in the Core rules as they
+    are applied to your site.</p><p><span class="bold"><strong>Note</strong></span></p><p>It is highly encouraged that you do not edit the Core rules files
+    themselves but rather place all changes (such as
+    <code class="literal">SecRuleRemoveByID</code>, etc...) in your custom rules file.
+    This will allow for easier upgrading as newer Core rules are released by
+    Breach Security on the ModSecurity website.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10119"></a><code class="literal">SecAction</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Unconditionally
+      processes the action list it receives as the first and only parameter.
+      It accepts one parameter, the syntax of which is identical to the third
+      parameter of<code class="literal"> SecRule</code>.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecAction action1,action2,action2</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecAction
+      nolog,redirect:http://www.hostname.com</code></p><p><span class="bold"><strong>ProcessingPhase:</strong></span> Any</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> None</p><p>SecAction is best used when you uncondiationally execute an
+      action. This is explicit triggering whereas the normal Actions are
+      conditional based on data inspection of the request/response. This is a
+      useful directive when you want to run certian actions such as initcol to
+      initialize collections.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10147"></a><code class="literal">SecArgumentSeparator</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Specifies which
+      character to use as separator for<code class="literal">
+      application/x-www-form-urlencoded</code> content. Defaults to
+      <code class="literal">&amp;</code>. Applications are sometimes
+      (very rarely) written to use a semicolon (<code class="literal">;</code>).</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecArgumentSeparator character</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecArgumentSeparator ;</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> Any</p><p><span class="bold"><strong> <span class="bold"><strong>Scope:</strong></span>
+      </strong></span> Main</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> None</p><p>This directive is needed if a backend web appliaction is using a
+      non-standard argument separator. If this directive is not set properly
+      for each web app, then ModSecurity will not be able to parse the
+      arguements appropriately and the effectiveness of the rule matching will
+      be significantly decreased.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10181"></a><code class="literal">SecAuditEngine</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures the audit
+      logging engine.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecAuditEngine On|Off|RelevantOnly</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecAuditEngine On</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> Can be
+      set/changed with the "ctl" action for the current transaction.</p><p>Example: The following example shows the various audit directives
+      used together.</p><pre class="programlisting"><span class="bold"><strong>SecAuditEngine RelevantOnly</strong></span> 
+SecAuditLog logs/audit/audit.log
+SecAuditLogParts ABCFHZ
+SecAuditLogType concurrent
+SecAuditLogStorageDir logs/audit
+<span class="bold"><strong>SecAuditLogRelevantStatus ^[45]</strong></span></pre><p>Possible values are:</p><div class="itemizedlist"><ul type="disc"><li><p><code class="literal">On</code> - log all transactions
+          by default.</p></li><li><p><code class="literal">Off</code> - do not log
+          transactions by default.</p></li><li><p><code class="literal">RelevantOnly</code> - by default
+          only log transactions that have triggered a warning or an error, or
+          have a status code that is considered to be relevant (see<code class="literal"> SecAuditLogRelevantStatus</code>).</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N101CD"></a><code class="literal">SecAuditLog</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Defines the path to
+      the main audit log file.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecAuditLog /path/to/auditlog</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecAuditLog
+      /usr/local/apache/logs/audit.log</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> This file is
+      open on startup when the server typically still runs as<span class="emphasis"><em>
+      root</em></span>. You should not allow non-root users to have write
+      privileges for this file or for the directory it is stored in..</p><p>This file will be used to store the audit log entries if serial
+      audit logging format is used. If concurrent audit logging format is used
+      this file will be used as an index, and contain a record of all audit
+      log files created. If you are planning to use Concurrent audit logging
+      and sending your audit log data off to a remote Console host, then you
+      will need to use the modsec-auditlog-collector.pl script and use the
+      following format:</p><p><pre class="programlisting">SecAuditLog \
+  "|/path/modsec-auditlog-collector.pl /path/SecAuditLogDataDir /path/SecAuditLog"</pre></p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N101FE"></a><code class="literal">SecAuditLog2</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Defines the path to
+      the secondary audit log index file when concurrent logging is enabled.
+      See <code class="literal">SecAuditLog2</code> for more
+      details.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecAuditLog2 /path/to/auditlog2</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecAuditLog2
+      /usr/local/apache/logs/audit2.log</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> A main audit
+      log must be defined via <code class="literal">SecAuditLog</code>
+      before this directive may be used. Additionally, this log is only used
+      for replicating the main audit log index file when concurrent audit
+      logging is used. It will <span class="bold"><strong>not</strong></span> be used
+      for non-concurrent audit logging.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10232"></a><code class="literal">SecAuditLogParts</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Defines the path to
+      the main audit log file.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecAuditLogParts PARTS</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecAuditLogParts ABCFHZ</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong> <span class="bold"><strong>Scope:</strong></span>
+      </strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> At this time
+      ModSecurity does not log response bodies of stock Apache responses (e.g.
+      <code class="literal">404</code>), or the <code class="literal">Server</code> and <code class="literal">Date</code> response headers.</p><p>Default:<code class="literal"> ABCFHZ</code>.</p><p>Available audit log parts:</p><div class="itemizedlist"><ul type="disc"><li><p><code class="literal">A</code> - audit log header
+          (mandatory)</p></li><li><p><code class="literal">B</code> - request
+          headers</p></li><li><p><code class="literal">C</code> - request body (present
+          only if the request body exists and ModSecurity is configured to
+          intercept it)</p></li><li><p><code class="literal">D</code> - RESERVED for
+          intermediary response headers, not implemented yet.</p></li><li><p><code class="literal">E</code> - intermediary response
+          body (present only if ModSecurity is configured to intercept
+          response bodies, and if the audit log engine is configured to record
+          it). Intermediary response body is the same as the actual response
+          body unless ModSecurity intercepts the intermediary response body,
+          in which case the actual response body will contain the error
+          message (either the Apache default error message, or the
+          ErrorDocument page).</p></li><li><p><code class="literal">F</code> - final response
+          headers (excluding the Date and Server headers, which are always
+          added by Apache in the late stage of content delivery).</p></li><li><p><code class="literal">G</code> - RESERVED for the
+          actual response body, not implemented yet.</p></li><li><p><code class="literal">H</code> - audit log
+          trailer</p></li><li><p><code class="literal">I</code> - This part is a
+          replacement for part C. It will log the same data as C in all cases
+          except when<code class="literal">multipart/form-data</code>
+          encoding in used. In this case it will log a fake <code class="literal"> application/x-www-form-urlencoded</code> body
+          that contains the information about parameters but not about the
+          files. This is handy if you don't want to have (often large) files
+          stored in your audit logs.</p></li><li><p><code class="literal">J</code> - RESERVED. This part,
+          when implemented, will contain information about the files uploaded
+          using multipart/form-data encoding.</p></li><li><p><code class="literal">Z</code> - final boundary,
+          signifies the end of the entry (mandatory)</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N102BD"></a><code class="literal">SecAuditLogRelevantStatus</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures which
+      response status code is to be considered relevant for the purpose of
+      audit logging.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecAuditLogRelevantStatus REGEX</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecAuditLogRelevantStatus ^[45]</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> Must have the
+      SecAuditEngine set to RelevantOnly. The parameter is a regular
+      expression.</p><p>The main purpose of this directive is to allow you to configure
+      audit logging for only transactions that generate the specified HTTP
+      Response Status Code. This directive is often used to the decrease the
+      total size of the audit log file. Keep in mind that if this parameter is
+      used, then successful attacks that result in a 200 OK status code will
+      not be logged.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N102E7"></a><code class="literal">SecAuditLogStorageDir</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures the
+      storage directory where concurrent audit log entries are to be
+      stored.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecAuditLogStorageDir
+      /path/to/storage/dir</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecAuditLogStorageDir
+      /usr/local/apache/logs/audit</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span>
+      SecAuditLogType must be set to Concurrent. The directory must already be
+      created before starting Apache and it must be writable by the web server
+      user as new files are generated at runtime.</p><p>As with all logging mechanisms, ensure that you specify a file
+      system location that has adequate disk space and is not on the root
+      partition.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10311"></a><code class="literal">SecAuditLogType</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures the type
+      of audit logging mechanism to be used.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecAuditLogType Serial|Concurrent</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecAuditLogType Serial</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> Must specify
+      SecAuditLogStorageDir if you use concurrent logging.</p><p>Possible values are:</p><div class="orderedlist"><ol type="1"><li><p><code class="literal">Serial</code> - all audit log
+          entries will be stored in the main audit logging file. This is more
+          convenient for casual use but it is slower as only one audit log
+          entry can be written to the file at any one file.</p></li><li><p><code class="literal">Concurrent</code> - audit log
+          entries will be stored in separate files, one for each transaction.
+          Concurrent logging is the mode to use if you are going to send the
+          audit log data off to a remote ModSecurity Console host.</p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1034A"></a><code class="literal">SecChrootDir</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures the
+      directory path that will be used to jail the web server process.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecChrootDir /path/to/chroot/dir</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecChrootDir /chroot</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Main</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> The internal
+      chroot functionality provided by ModSecurity works great for simple
+      setups. One example of a simple setup is Apache serving static files
+      only, or running scripts using modules. For more complex setups you
+      should consider building a jail the old-fashioned way. The internal
+      chroot feature should be treated as somewhat experimental. Due to the
+      large number of default and third-party modules available for the Apache
+      web server, it is not possible to verify the internal chroot works
+      reliably with all of them. You are advised to think about your option
+      and make your own decision. In particular, if you are using any of the
+      modules that fork in the module initialisation phase (e.g. mod_fastcgi,
+      mod_fcgid, mod_cgid), you are advised to examine each Apache process and
+      observe its current working directory, process root, and the list of
+      open files.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10372"></a><code class="literal">SecCookieFormat</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Selects the cookie
+      format that will be used in the current configuration context.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecCookieFormat 0|1</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecCookieFormat 0</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> None</p><p>Possible values are:</p><div class="itemizedlist"><ul type="disc"><li><p><code class="literal">0</code> - use version 0
+          (Netscape) cookies. This is what most applications use. It is the
+          default value.</p></li><li><p><code class="literal">1</code> - use version 1
+          cookies.</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N103A9"></a><code class="literal">SecDataDir</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Path where
+      persistent data (e.g. IP address data, session data, etc) is to be
+      stored.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecDataDir /path/to/dir</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecDataDir /usr/local/apache/logs/data</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong> <span class="bold"><strong>Scope:</strong></span>
+      </strong></span> Main</p><p><span class="bold"><strong>Dependencies/Notes: </strong></span> This
+      directive is needed when initcol, setsid an setuid are used. Must be
+      writable by the web server user.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N103D5"></a><code class="literal">SecDebugLog</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Path to the
+      ModSecurity debug log file.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecDebugLog /path/to/modsec-debug.log</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecDebugLog
+      /usr/local/apache/logs/modsec-debug.log</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> None</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N103FD"></a><code class="literal">SecDebugLogLevel</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures the
+      verboseness of the debug log data.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecDebugLogLevel 0|1|2|3|4|5|6|7|8|9</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecDebugLogLevel 4</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> Levels
+      <code class="literal">1 - 3</code> are always sent to the Apache
+      error log. Therefore you can always use level <code class="literal">0</code> as the default logging level in production.
+      Level <code class="literal">5</code> is useful when debugging. It
+      is not advisable to use higher logging levels in production as excessive
+      logging can slow down server significantly.</p><p>Possible values are:</p><div class="itemizedlist"><ul type="disc"><li><p><code class="literal">0</code> - no logging.</p></li><li><p><code class="literal">1</code> - errors (intercepted
+          requests) only.</p></li><li><p><code class="literal">2</code> - warnings.</p></li><li><p><code class="literal">3</code> - notices.</p></li><li><p><code class="literal">4</code> - details of how
+          transactions are handled.</p></li><li><p><code class="literal">5</code> - as above, but including
+          information about each piece of information handled.</p></li><li><p><code class="literal">9</code> - log everything,
+          including very detailed debugging information.</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1045E"></a><code class="literal">SecDefaultAction</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Defines the default
+      action to take on a rule match.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecDefaultAction
+      action1,action2,action3</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecDefaultAction
+      log,auditlog,deny,status:403,phase:2,t:lowercase</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> Any</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> Rules
+      following a SecDefaultAction directive will inherit this setting unless
+      a specific action is specified for an indivdual rule or until another
+      SecDefaultAction is specified.</p><p>The default value is:</p><pre class="programlisting">SecDefaultAction log,auditlog,deny,status:403,phase:2,t:none</pre><p><span class="bold"><strong>Note</strong></span></p><p>SecDefaultAction must specify a disruptive action and a processing
+      phase.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10491"></a><code class="literal">SecGuardianLog</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configuration
+      directive to use the httpd-guardian script to monitor for Denial of
+      Service (DoS) attacks.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecGuardianLog |/path/to/httpd-guardian</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecGuardianLog
+      |/usr/local/apache/bin/httpd-guardian</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Main</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> By default
+      httpd-guardian will defend against clients that send more 120 requests
+      in a minute, or more than 360 requests in five minutes.</p><p>Since 1.9, ModSecurity supports a new directive, SecGuardianLog,
+      that is designed to send all access data to another program using the
+      piped logging feature. Since Apache is typically deployed in a
+      multi-process fashion, making information sharing difficult, the idea is
+      to deploy a single external process to observe all requests in a
+      stateful manner, providing additional protection.</p><p>Development of a state of the art external protection tool will be
+      a focus of subsequent ModSecurity releases. However, a fully functional
+      tool is already available as part of the <a href="http://www.apachesecurity.net/tools/" target="_top">Apache httpd tools
+      project</a>. The tool is called httpd-guardian and can be used to
+      defend against Denial of Service attacks. It uses the blacklist tool
+      (from the same project) to interact with an iptables-based (Linux) or
+      pf-based (*BSD) firewall, dynamically blacklisting the offending IP
+      addresses. It can also interact with SnortSam (http://www.snortsam.net).
+      Assuming httpd-guardian is already configured (look into the source code
+      for the detailed instructions) you only need to add one line to your
+      Apache configuration to deploy it:</p><pre class="programlisting">SecGuardianLog |/path/to/httpd-guardian</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N104C5"></a><code class="literal">SecRequestBodyAccess</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures whether
+      request bodies will be buffered and processed by ModSecurity by
+      default.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecRequestBodyAccess On|Off</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecRequestBodyAccess On</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> This
+      directive is required if you plan to inspect POST_PAYLOADS of requests.
+      This directive must be used along with the "phase:2" processing phase
+      action and REQUEST_BODY variable/location. If any of these 3 parts are
+      not configured, you will not be able to inspect the request
+      bodies.</p><p>Possible values are:</p><div class="itemizedlist"><ul type="disc"><li><p><code class="literal">On</code> - access request
+          bodies.</p></li><li><p><code class="literal">Off</code> - do not attempt to
+          access request bodies.</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N104FC"></a><code class="literal">SecRequestBodyLimit</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures the
+      maximum request body size ModSecurity will accept for buffering.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecRequestBodyLimit NUMBER_IN_BYTES</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecRequestBodyLimit 134217728</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> 131072 KB
+      (134217728 bytes) is the default setting. Anything over this limit will
+      be rejected with status code 413 Request Entity Too Large. There is a
+      hard limit of 1 GB.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10524"></a><code class="literal">SecRequestBodyInMemoryLimit</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures the
+      maximum request body size ModSecurity will store in memory.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecRequestBodyInMemoryLimit
+      NUMBER_IN_BYTES</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecRequestBodyInMemoryLimit 131072</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> None</p><p>By default the limit is 128 KB:</p><pre class="programlisting"># Store up to 128 KB in memory
+SecRequestBodyInMemoryLimit 131072</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10551"></a><code class="literal">SecResponseBodyLimit</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures the
+      maximum response body size that will be accepted for buffering.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecResponseBodyLimit NUMBER_IN_BYTES</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecResponseBodyLimit 524228</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> Anything over
+      this limit will be rejected with status code 500 Internal Server Error.
+      This setting will not affect the responses with MIME types that are not
+      marked for buffering. There is a hard limit of 1 GB.</p><p>By default this limit is configured to 512 KB:</p><pre class="programlisting"># Buffer response bodies of up to 512 KB in length 
+SecResponseBodyLimit 524288</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1057E"></a><code class="literal">SecResponseBodyMimeType</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures
+      which<code class="literal"> MIME</code> types are to be considered
+      for response body buffering.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecResponseBodyMimeType mime/type</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecResponseBodyMimeType text/plain
+      text/html</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span>
+      Multiple<code class="literal"> SecResponseBodyMimeType</code>
+      directives can be used to add<code class="literal"> MIME</code>
+      types.</p><p>The default value is <code class="literal">text/plaintext/html</code>:</p><pre class="programlisting">SecResponseBodyMimeType text/plain text/html</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N105BB"></a><code class="literal">SecResponseBodyMimeTypesClear</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Clears the list of
+      <code class="literal">MIME</code> types considered for response
+      body buffering, allowing you to start populating the list from
+      scratch.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecResponseBodyMimeTypesClear</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecResponseBodyMimeTypesClear</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> None</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N105E7"></a><code class="literal">SecResponseBodyAccess</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures whether
+      response bodies are to be buffer and analysed or not.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecResponseBodyAccess On|Off</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecResponseBodyAccess On</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> This
+      directive is required if you plan to inspect html responses. This
+      directive must be used along with the "phase:4" processing phase action
+      and RESPONSE_BODY variable/location. If any of these 3 parts are not
+      configured, you will not be able to inspect the response bodies.</p><p>Possible values are:</p><div class="itemizedlist"><ul type="disc"><li><p><code class="literal">On</code> - access response bodies
+          (but only if the MIME type matches, see above).</p></li><li><p><code class="literal">Off</code> - do not attempt to
+          access response bodies.</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1061E"></a><code class="literal">SecRule</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> <code class="literal">SecRule</code> is the main ModSecurity directive. It
+      is used to analyse data and perform actions based on the results.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecRule VARIABLES OPERATOR [ACTIONS]</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecRule REQUEST_URI "attack"</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> Any</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> None</p><p>In general, the format of this rule is as follows:</p><pre class="programlisting">SecRule VARIABLES OPERATOR [ACTIONS]</pre><p>The second part, <code class="literal">OPERATOR</code>,
+      specifies how they are going to be checked. The third (optional) part,
+      <code class="literal">ACTIONS</code>, specifies what to do
+      whenever the operator used performs a successful match against a
+      variable.</p><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N10659"></a>Variables in rules</h4></div></div><div></div></div><p>The first part,<code class="literal"> VARIABLES</code>,
+        specifies which variables are to be checked. For example, the
+        following rule will reject a transaction that has the word<span class="emphasis"><em>
+        dirty</em></span> in the URI:</p><pre class="programlisting">SecRule REQUEST_URI dirty</pre><p>Each rule can specify one or more variables:</p><pre class="programlisting">SecRule REQUEST_URI|QUERY_STRING dirty</pre><p>There is a third format supported by the selection operator -
+        XPath expression. XPath expressions can only used against the special
+        variable XML, which is available only of the request body was
+        processed as XML.</p><pre class="programlisting">SecRule XML:/xPath/Expression dirty</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>As you have just seen, not all collections support all
+          selection operator format types. You should refer to the
+          documentation of each collection to determine what is and isn't
+          supported.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N10675"></a>Operators in rules</h4></div></div><div></div></div><p>In the simplest possible case you will use a regular expression
+        pattern as the second rule parameter. This is what we've done in the
+        examples above. If you do this ModSecurity assumes you want to use the
+        <code class="literal">rx</code> operator. You can explicitly
+        specify the operator you want to use by using <code class="literal">@</code> as the first character in the second rule
+        parameter:</p><pre class="programlisting">SecRule REQUEST_URI "@rx dirty"</pre><p>Note how we had to use double quotes to delimit the second rule
+        parameter. This is because the second parameter now has a whitespace
+        in it. Any number of whitespace characters can follow the name of the
+        operator. If there are any non-whitespace characters there, they will
+        all be treated as a special parameter to the operator. In the case of
+        the regular expression operator the special parameter is the pattern
+        that will be used for comparison.</p><p>The @ can be the second character if you are using negation to
+        negate the result returned by the operator:</p><pre class="programlisting">SecRule &amp;ARGS "!@rx ^0$"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N1068C"></a>Actions in rules</h4></div></div><div></div></div><p>The third parameter, <code class="literal">ACTIONS</code>,
+        can be omitted only because there is a helper feature that specifies
+        the default action list. If the parameter isn't omitted the actions
+        specified in the parameter will be merged with the default action list
+        to create the actual list of actions that will be processed on a rule
+        match.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10695"></a><code class="literal">SecRuleInheritance</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures whether
+      the current context will inherit rules from the parent context
+      (configuration options are inherited in most cases - you should look up
+      the documentation for every directive to determine if it is inherited or
+      not).</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecRuleInheritance On|Off</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecRuleInheritance Off</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> Any</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span>
+      Resource-specific contexts (e.g.<code class="literal">
+      Location</code>, <code class="literal">Directory</code>, etc)
+      cannot override <span class="emphasis"><em>phase1</em></span> rules configured in the main
+      server or in the virtual server. This is because phase 1 is run early in
+      the request processing process, before Apache maps request to resource.
+      Virtual host context can override phase 1 rules configured in the main
+      server.</p><p>Example: The following example shows where ModSecurity may be
+      enabled in the main Apache configuration scope, however you might want
+      to configure your VirtualHosts differently. In the first example, the
+      first virtualhost is not inheriting the ModSecurity main config
+      directives and in the second one it is.</p><pre class="programlisting">SecRuleEnine On
+SecDefaultAction log,pass,phase:2
+...  
+
+&lt;VirtualHost *:80&gt;
+ServerName app1.com 
+ServerAlias www.app1.com<span class="bold"><strong>
+SecRuleInheritance Off</strong></span>
+SecDefaultAction log,deny,phase:1,redirect:http://www.site2.com 
+... 
+&lt;/VirtualHost&gt;  
+
+&lt;VirtualHost *:80&gt; 
+ServerName app2.com 
+ServerAlias www.app2.com
+<span class="bold"><strong>SecRuleInheritance On</strong></span> SecRule ARGS "attack" 
+... 
+&lt;/VirtualHost&gt;</pre><p>Possible values are:</p><div class="itemizedlist"><ul type="disc"><li><p><code class="literal">On</code> - inherit rules from the
+          parent context.</p></li><li><p><code class="literal">Off</code> - do not inherit rules
+          from the parent context.</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N106E4"></a><code class="literal">SecRuleEngine</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures the rules
+      engine.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecRuleEngine On|Off|DetectionOnly</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecRuleEngine On</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> Any</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> Thisdirective
+      can also be controled by the ctl action (ctl:ruleEngine=off) for per
+      rule processing.</p><p>Possible values are:</p><div class="itemizedlist"><ul type="disc"><li><p><code class="literal">On</code> - process rules.</p></li><li><p><code class="literal">Off</code> - do not process
+          rules.</p></li><li><p><code class="literal">DetectionOnly</code> - process
+          rules but never intercept transactions, even when rules are
+          configured to do so.</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10721"></a><code class="literal">SecRuleRemoveById</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Removes matching
+      rules from the parent contexts.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecRuleRemoveById RULEID</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecRuleRemoveByID 1 2 "9000-9010"</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> Any</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> This
+      directive supports multiple parameters, where each parameter can either
+      be a rule ID, or a range. Parameters that contain spaces must be
+      delimited using double quotes.</p><pre class="programlisting">SecRuleRemoveById 1 2 5 10-20 "400-556" 673</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1074C"></a><code class="literal">SecRuleRemoveByMsg</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Removes matching
+      rules from the parent contexts.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecRuleRemoveByMsg REGEX</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecRuleRemoveByMsg "FAIL"</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> Any</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> This
+      directive supports multiple parameters. Each parameter is a regular
+      expression that will be applied to the message (specified using the
+      <code class="literal">msg</code> action).</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10778"></a><code class="literal">SecServerSignature</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Instructs
+      ModSecurity to change the data presented in the "Server:" response
+      header token.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecServerSignature "WEB SERVER
+      SOFTWARE"</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecServerSignature
+      "Netscape-Enterprise/6.0"</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Main</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> In order for
+      this directive to work, you must set the Apache ServerTokens directive
+      to Full. ModSecurity will overwrite the server signature data held in
+      this memory space with the data set in this directive. If ServerTokens
+      is not set to Full, then the memory space is most likely not large
+      enough to hold the new data we are looking to insert.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N107A0"></a><code class="literal">SecTmpDir</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures the
+      directory where temporary files will be created.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecTmpDir /path/to/dir</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecTmpDir /tmp</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> Needs to be
+      writable by the Apache user process. This is the directory location
+      where Apache will swap data to disk if it runs out of memory (more data
+      than what was specified in the SecRequestBodyInMemoryLimit directive)
+      during inspection.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N107C8"></a><code class="literal">SecUploadDir</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures the
+      directory where intercepted files will be stored.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecUploadDir /path/to/dir</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecUploadDir /tmp</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> This
+      directory must be on the same filesystem as the temporary directory
+      defined with <code class="literal">SecTmpDir</code>. This
+      directive is used with <code class="literal">SecUploadKeepFiles</code>.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N107F7"></a><code class="literal">SecUploadKeepFiles</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Configures whether
+      or not the intercepted files will be kept after transaction is
+      processed.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecUploadKeepFiles On|Off|RelevantOnly</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecUploadKeepFiles On</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> This
+      directive requires the storage directory to be defined (using <code class="literal">SecUploadDir</code>).</p><p>Possible values are:</p><div class="itemizedlist"><ul type="disc"><li><p><code class="literal">On</code> - Keep uploaded
+          files.</p></li><li><p><code class="literal">Off</code> - Do not keep uploaded
+          files.</p></li><li><p><code class="literal">RelevantOnly</code> - This will
+          keep only those files that belong to requests that are deemed
+          relevant.</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10838"></a><code class="literal">SecWebAppId</code></h3></div></div><div></div></div><p><span class="bold"><strong>Description:</strong></span> Creates a partition
+      on the server that belongs to one web application.</p><p><span class="bold"><strong>Syntax:</strong></span> <code class="literal">SecWebAppId "NAME"</code></p><p><span class="bold"><strong>Example Usage:</strong></span> <code class="literal">SecWebAppId "WebApp1"</code></p><p><span class="bold"><strong>Processing Phase:</strong></span> N/A</p><p><span class="bold"><strong>Scope:</strong></span> Any</p><p><span class="bold"><strong>Dependencies/Notes:</strong></span> Partitions
+      are used to avoid collisions between session IDs and user IDs. This
+      directive must be used if there are multiple applications deployed on
+      the same server. If it isn't used, a collision between session IDs might
+      occur. The default value is<code class="literal"> default</code>.
+      Example:</p><pre class="programlisting">&lt;VirtualHost *:80&gt; 
+ServerName app1.com 
+ServerAlias www.app1.com
+<span class="bold"><strong>SecWebAppId "App1"</strong></span>
+SecRule REQUEST_COOKIES:PHPSESSID !^$ chain,nolog,pass 
+SecAction setsid:%{REQUEST_COOKIES.PHPSESSID} 
+... 
+&lt;/VirtualHost&gt;  
+
+&lt;VirtualHost *:80&gt; 
+ServerName app2.com 
+ServerAlias www.app2.com<span class="bold"><strong>
+SecWebAppId "App2"</strong></span>
+SecRule REQUEST_COOKIES:PHPSESSID !^$ chain,nolog,pass 
+SecAction setsid:%{REQUEST_COOKIES.PHPSESSID} 
+... 
+&lt;/VirtualHost&gt;</pre><p>In the two examples configurations shown, SecWebAppId is being
+      used in conjuction with the Apache VirtualHost directives. What this
+      achieves is to create more unique collection names when being hosted on
+      one server. Normally, when setsid is used, ModSecurity will create a
+      collection with the name "SESSION" and it will hold the value specified.
+      With using SecWebAppId as shown in the examples, however, the name of
+      the collection would become "App1_SESSION" and "App2_SESSION".</p><p>SecWebAppId is relevant in two cases:</p><div class="orderedlist"><ol type="1"><li><p>You are logging transactions/alerts to the ModSecurity Console
+          and you want to use the web application ID to search only the
+          transactions belonging to that application.</p></li><li><p>You are using the data persistence facility (collections
+          SESSION and USER) and you need to avoid collisions between sessions
+          and users belonging to different applications.</p></li></ol></div></div></div><div id="navfooter"><hr size="1"><table summary="Navigation footer" width="100%"><tr><td align="left" width="40%"><a accesskey="p" href="02-installation.html">Prev</a>&nbsp;</td><td align="center" width="20%">&nbsp;</td><td align="right" width="40%">&nbsp;<a accesskey="n" href="04-processing-phases.html">Next</a></td></tr><tr><td valign="top" align="left" width="40%">Installation&nbsp;</td><td align="center" width="20%"><a accesskey="h" href="index.html">Home</a></td><td valign="top" align="right" width="40%">&nbsp;Processing Phases</td></tr></table></div><div align="center" class="copyright">Copyright (C) 2004-2006 <a href="http://www.breach.com">Breach Security</a></div></body></html>
